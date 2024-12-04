@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="new-tab-page.css" />
+    <title>New Container Tab Page</title>
+  </head>
+  <body>
+    <div id="clock-container">
+      <div id="clock"></div> <!-- Moved clock element -->
+      <div id="current-container-badge"></div> <!-- Added badge element -->
+    </div>
+    <div id="container-switcher">
+      <div id="current-container-color"></div>
+      <div id="container-buttons">
+        <template id="container-button-template">
+          <div class="container-button" data-container="">
+            <div class="icon-container">
+              <img class="icon" />
+            </div>
+            <span class="name"></span>
+          </div>
+        </template>
+      </div>
+    </div>
+    <script src="new-tab-page.js"></script>
+  </body>
+</html>
