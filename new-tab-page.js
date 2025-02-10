@@ -34,6 +34,7 @@ async function init() {
       containerButtons.appendChild(node);
       if (identity.cookieStoreId === currentContainerId) {
         currentContainer.style.backgroundColor = identity.colorCode;
+        currentContainer.style.fill = identity.colorCode;
         updateCurrentContainerBadge(identity.name, identity.colorCode);
       }
     }
@@ -63,62 +64,38 @@ function updateClock() {
 function updateCurrentContainerBadge(containerName, containerColor) {
   const badge = document.querySelector("#current-container-badge");
   badge.textContent = containerName;
-  badge.style.setProperty("--container-color", containerColor); // Set the CSS variable for container color
-  badge.style.setProperty("--container-color-dark", shadeColorHSL(containerColor, -10)); // Set the darker variant
-  badge.style.setProperty("--container-color-light", shadeColorHSL(containerColor, 50)); // Set the lighter variant
+  badge.style.setProperty("--container-color", hexToRGBA(containerColor, 1));
+  badge.style.setProperty("--container-color-dark", hexToRGBA(containerColor, 1));
+  badge.style.setProperty("--container-color-light",  hexToRGBA(containerColor, 0.1));
 }
 
-// Function to shade a color using HSL
-function shadeColorHSL(color, percent) {
-  const num = parseInt(color.slice(1), 16);
-  let r = (num >> 16) & 255;
-  let g = (num >> 8) & 255;
-  let b = num & 255;
-
-  r /= 255;
-  g /= 255;
-  b /= 255;
-
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  let h, s, l = (max + min) / 2;
-
-  if (max === min) {
-    h = s = 0; // achromatic
-  } else {
-    const d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-    switch (max) {
-      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-      case g: h = (b - r) / d + 2; break;
-      case b: h = (r - g) / d + 4; break;
-    }
-    h /= 6;
+// Shade a color in HSL format
+function hexToRGBA(hex, alpha = 1) {
+  // Remove the hash if present
+  hex = hex.replace(/^#/, '');
+  
+  // Validate hex format
+  if (!/^([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
+      throw new Error('Invalid HEX color format');
+  }
+  
+  // Validate alpha value
+  if (typeof alpha !== 'number' || alpha < 0 || alpha > 1) {
+      throw new Error('Alpha value must be a number between 0 and 1');
   }
 
-  l = l + (percent / 100);
-  l = Math.min(1, Math.max(0, l));
-
-  if (s === 0) {
-    r = g = b = l; // achromatic
-  } else {
-    const hue2rgb = (p, q, t) => {
-      if (t < 0) t += 1;
-      if (t > 1) t -= 1;
-      if (t < 1 / 6) return p + (q - p) * 6 * t;
-      if (t < 1 / 2) return q;
-      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-      return p;
-    };
-
-    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-    const p = 2 * l - q;
-    r = hue2rgb(p, q, h + 1 / 3);
-    g = hue2rgb(p, q, h);
-    b = hue2rgb(p, q, h - 1 / 3);
+  // Convert shorthand hex (e.g., #F00) to full form (e.g., #FF0000)
+  if (hex.length === 3) {
+      hex = hex.split('').map(char => char + char).join('');
   }
-
-  return `#${Math.round(r * 255).toString(16).padStart(2, '0')}${Math.round(g * 255).toString(16).padStart(2, '0')}${Math.round(b * 255).toString(16).padStart(2, '0')}`;
+  
+  // Convert hex to RGB values
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  
+  // Return RGBA string
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 // Change the container of the current tab
@@ -143,8 +120,7 @@ function createButton(identity) {
     .cloneNode(true);
   node.querySelector(".name").innerText = identity.name;
   node.querySelector(".icon").setAttribute("src", identity.iconUrl);
-  node.querySelector(".icon-container").style.backgroundColor =
-    identity.colorCode;
+  node.querySelector(".icon-overlay").style.backgroundColor = hexToRGBA(identity.colorCode, 0.8);
   node.setAttribute("data-container", identity.cookieStoreId);
   node.addEventListener("click", function () {
     changeContainer(node);

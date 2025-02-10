@@ -1,5 +1,3 @@
-console.log("Content script is running!");
-
 // Check if the current container is the default container
 function isDefaultContainer() {
   return browser.runtime.sendMessage({ action: "getCurrentContainer" }).then((response) => {
@@ -12,25 +10,24 @@ function createMenuBar() {
   const menuBar = document.createElement("div");
   menuBar.id = "multi-account-container-switcher-menu-bar";
   const shadow = menuBar.attachShadow({ mode: "open" });
-  shadow.innerHTML = `
+  shadow.innerHTML = /*html*/`
     <style>
       #menu-bar {
         position: fixed;
         box-sizing: border-box;
-        top: 16px; /* Added gap from the top */
-        right: 16px; /* Added gap from the right */
+        top: 50%;
+        transform: translateY(-50%);
+        right: 16px;
         padding: 16px;
         z-index: 2147483647;
         font-family: Arial, sans-serif;
         font-size: 14px;
-        background-color: white; /* Added white background */
-        box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2); /* Added drop shadow */
-        border-radius: 32px; /* Added border radius */
-      }
-      #menu-bar div {
-        padding: 16px;
         background-color: white;
         box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
+        border-radius: 32px;
+      }
+      #menu-bar div {
+        background-color: white;
         border-radius: 32px;
       }
       #menu-bar ul {
@@ -43,16 +40,15 @@ function createMenuBar() {
       }
       #menu-bar button {
         margin-top: 16px;
-        padding: 8px 16px;
+        padding: 8px;
         border: none;
         background-color: #0078d4;
         color: white;
-        font-size: 16px;
-        border-radius: 16px;
+        border-radius: 32px;
         cursor: pointer;
         width: 100%;
-        height: 40px;
         transition: background-color 0.2s;
+        line-height: 0;
       }
       #menu-bar button:hover {
         background-color: #005a9e;
@@ -65,12 +61,6 @@ function createMenuBar() {
         background-color: #004578;
       }
       #menu-bar a {
-        text-decoration: none;
-        color: black;
-        border-radius: 16px;
-        padding: 8px 16px;
-        display: flex;
-        align-items: center;
       }
       #menu-bar a:hover {
         background-color: #f0f0f0;
@@ -79,14 +69,19 @@ function createMenuBar() {
       #menu-bar .container-icon {
         width: 16px;
         height: 16px;
-        border-radius: 50%;
-        margin-right: 8px;
         padding: 8px;
+      }
+      .icon-container:hover {
+        opacity: 0.8;
       }
     </style>
     <div id="menu-bar">
       <ul id="container-list"></ul>
-      <button id="close-menu-bar">Close</button>
+      <button id="close-menu-bar">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+        </svg>
+      </button>
     </div>
   `;
   return menuBar;
@@ -95,7 +90,6 @@ function createMenuBar() {
 // Add the menu bar to the page
 function addMenuBarToPage() {
   isDefaultContainer().then((isDefault) => {
-    console.log("Is default container:", isDefault);
     if (!isDefault) {
       return;
     }
@@ -111,20 +105,31 @@ function addMenuBarToPage() {
 
     // Send a message to the background script to get container identities
     browser.runtime.sendMessage({ action: "getContainers" }).then((response) => {
-      console.log("Containers:", response);
       const containerList = shadow.getElementById("container-list");
       response.containers.forEach((identity) => {
         const listItem = document.createElement("li");
         const icon = document.createElement("img");
+        const iconContainer = document.createElement("div");
+        const iconOverlay = document.createElement("div");
         const link = document.createElement("a");
-        const containerName = document.createElement("span");
-        containerName.textContent = identity.name;
+        iconOverlay.style.backgroundColor = identity.colorCode;
+        iconOverlay.style.opacity = "0.8";
         icon.src = identity.iconUrl;
         icon.classList.add("container-icon");
-        icon.style.backgroundColor = identity.colorCode;
+        iconContainer.style.position = "relative";
+        icon.style.left = 0;
+        icon.style.top = 0;
+        iconOverlay.style.height = "32px";
+        iconOverlay.style.width = "32px";
+        iconContainer.style.margin = "4px 0px";
+        iconOverlay.style.position = "absolute";
+        iconOverlay.style.left = 0;
+        iconOverlay.style.top = 0;
+        iconContainer.classList.add("icon-container");
+        iconContainer.appendChild(icon);
+        iconContainer.appendChild(iconOverlay);
         link.href = "#";
         link.addEventListener("click", () => {
-          console.log(`Container selected: ${identity.name}`);
           browser.runtime.sendMessage({
             action: "changeContainer",
             containerId: identity.cookieStoreId,
@@ -134,8 +139,7 @@ function addMenuBarToPage() {
             });
           });
         });
-        link.appendChild(icon);
-        link.appendChild(containerName);
+        link.appendChild(iconContainer);
         listItem.appendChild(link);
         containerList.appendChild(listItem);
       });
