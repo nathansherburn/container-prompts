@@ -1,6 +1,11 @@
 # Container Prompts
 This Firefox addon will prompt you to select a Multi-Account Container whenever you open a new tab.
 
+<img width="1512" alt="Screenshot 2024-12-04 at 10 52 53 pm" src="https://github.com/user-attachments/assets/201c9953-2650-4f3b-a548-4223a0253fc4">
+
+<img width="1512" alt="Screenshot 2024-12-04 at 10 56 12 pm" src="https://github.com/user-attachments/assets/ffd26647-4acd-4302-8d1d-e19367d7c06b">
+
+
 ## Developing
 This is a very simple addon so there's no build process or anything.
 1. Clone this repository.
